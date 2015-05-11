@@ -2,9 +2,6 @@
 
 ;;; Lines ;;;
 
-(def mklnobj (typ ob)
-  (app ob {typ typ}))
-
 #| line:
 (prn (proc (lin "" "test" "" "" "test"))) ->
 testtest
@@ -50,12 +47,12 @@ testtesting
        abc
        def
 
-(mac lvlind (n fst . rst)
-  `(lvl ,fst (ind ,n ,@rst)))
-|#
-
 (def lvlind (n . a)
   (mkdat 'lvlind a {n n}))
+|#
+
+(mac lvlind (n fst . rst)
+  `(lvl ,fst (ind ,n ,@rst)))
 
 #| indent:
 (prn (proc (lns "test" (ind 3 "testing" (ind 2 "abc" "def")) "hey"))) ->
@@ -157,7 +154,6 @@ hey
     flns (procflns a)
     lvl (proclvl a)
     ind (procind a)
-    lvlind (proclvlind a)
     wind (procwind a)
     note (proc1 (dat a))
     (sym str num) (emit a)
@@ -191,12 +187,14 @@ hey
   (dyn *indlvl* (if *indented* *linepos* *indlvl*)
     (proclns a)))
 
-(def proclvlind (a)
-  (dyn *indlvl* (if *indented* *linepos* *indlvl*)
-    (procind a)))
+(mac dyn+= (a x . bd)
+  `(dyn ,a (+ ,a ,x) ,@bd))
+
+(mac dynzap (f a . bd)
+  `(dyn ,a (,f ,a) ,@bd))
 
 (def procind (a)
-  (dyn *indlvl* (+ *indlvl* (. a n))
+  (dyn+= *indlvl* (. a n)
     (proclns (lns (dat a)))))
 
 (def procwind (a)
