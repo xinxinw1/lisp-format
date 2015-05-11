@@ -11,7 +11,7 @@ testtest
 |#
 
 (def lin a
-  (mklnobj 'lin {dat a}))
+  (mkdat 'lin a))
 
 #| lines:
 (prn (proc (lns "" "test" "" "" "test"))) ->
@@ -23,7 +23,7 @@ test
 |#
 
 (def lns a
-  (mklnobj 'lns {dat a}))
+  (mkdat 'lns a))
 
 #| fresh lines:
 (prn (proc (flns "" "test" "" "" "test"))) ->
@@ -32,7 +32,7 @@ test
 |#
 
 (def flns a
-  (mklnobj 'flns {dat a}))
+  (mkdat 'flns a))
 
 #| level:
 (prn (proc (lin "test" (lvl "test" "" "abc")))) ->
@@ -42,7 +42,7 @@ testtest
 |#
 
 (def lvl a
-  (mklnobj 'lvl {dat a}))
+  (mkdat 'lvl a))
 
 #| level with indent on next lines:
 (prn (proc (lin "test" (lvlind 3 "testing" "abc" "def")))) ->
@@ -55,7 +55,7 @@ testtesting
 |#
 
 (def lvlind (n . a)
-  (mklnobj 'lvlind {dat a n n}))
+  (mkdat 'lvlind a {n n}))
 
 #| indent:
 (prn (proc (lns "test" (ind 3 "testing" (ind 2 "abc" "def")) "hey"))) ->
@@ -67,7 +67,7 @@ hey
 |#
 
 (def ind (n . a)
-  (mklnobj 'ind {dat a n n}))
+  (mkdat 'ind a {n n}))
 
 #| with indent:
 (prn (proc (lns "test" (ind 3 "testing" (wind 2 "abc" "def") "what") "hey"))) ->
@@ -80,28 +80,28 @@ hey
 |#
 
 (def wind (n . a)
-  (mklnobj 'wind {dat a n n}))
+  (mkdat 'wind a {n n}))
 
 ; return object: proc only uses dat property
-(def rt (tp a (o opt {}))
-  (mklnobj 'rt {dat a tp tp opt (app {orig a} opt)}))
+(def note (a opt)
+  (mkdat 'note a {opt opt}))
 
 ; applies f to dat property of a
-(def mapdat (f a)
-  (mklnobj (. a typ) (app a {dat (f (. a dat))})))
+(def calldat (f a)
+  (mkdat (typ a) (f (dat a)) a))
 
-(over dsp (a)
+#|(over dsp (a)
   (sup (trans a)))
 
 (def trans (a)
   (case a
-    obj? (case (. a typ)
-           'lin `(lin ,@(trans (. a dat)))
-           'lns `(lns ,@(trans (. a dat)))
-           'ind `(ind ,(. a n) ,@(trans (. a dat)))
-           'rt  `(rt ,(. a tp) ,(trans (. a dat))))
+    obj? (case (typ a)
+           'lin `(lin ,@(trans (dat a)))
+           'lns `(lns ,@(trans (dat a)))
+           'ind `(ind ,(. a n) ,@(trans (dat a)))
+           'rt  `(rt ,(. a tp) ,(trans (dat a))))
     lis? (map trans a)
-    a))
+    a))|#
 
 ;;; Output lines ;;;
 
@@ -151,40 +151,37 @@ hey
 
 ; process any type
 (def proc1 (a)
-  (case a
-    obj?
-      (case (. a typ)
-        'lin (proclin a)
-        'lns (proclns a)
-        'flns (procflns a)
-        'lvl (proclvl a)
-        'ind (procind a)
-        'lvlind (proclvlind a)
-        'wind (procwind a)
-        'rt (proc1 (. a dat))
-        (err proc1 "Unknown type a = $1" a))
-    syn? (emit (str a))
-    str? (emit a)
+  (casetyp a
+    lin (proclin a)
+    lns (proclns a)
+    flns (procflns a)
+    lvl (proclvl a)
+    ind (procind a)
+    lvlind (proclvlind a)
+    wind (procwind a)
+    note (proc1 (dat a))
+    (sym str num) (emit a)
     (err proc1 "Unknown type a = $1" a)))
 
 ; process lin objects
 (def proclin (a)
-  (each x (rflat (. a dat))
-    (unless (no x) (proc1 x))))
+  (each x (rflat (dat a))
+    (if x (proc1 x))))
 
 ; process lns objects
 (def proclns (a)
   (var fst t)
-  (each x (rflat (. a dat))
+  (each x (rflat (dat a))
     (if (no x) (cont))
-    (if fst (= fst nil)
+    (if fst
+        (= fst nil)
         (newln))
     (proc1 x)))
 
 ; process flns objects
 (def procflns (a)
   (var fst t)
-  (each x (rflat (. a dat))
+  (each x (rflat (dat a))
     (if (no x) (cont))
     (if fst (= fst nil)
         (freshln))
@@ -200,11 +197,11 @@ hey
 
 (def procind (a)
   (dyn *indlvl* (+ *indlvl* (. a n))
-    (proclns (lns (. a dat)))))
+    (proclns (lns (dat a)))))
 
 (def procwind (a)
   (dyn *indlvl* (. a n)
-    (proclns (lns (. a dat)))))
+    (proclns (lns (dat a)))))
 
 (def rflat (a)
   (if (no a) nil
