@@ -1,5 +1,7 @@
 ;;;; Line Formatter ;;;;
 
+(package Format
+
 ;;; Lines ;;;
 
 (defbuil lin lns flns lvl)
@@ -146,3 +148,7 @@ hey
 (def procwind (a)
   (dyn *indlvl* (. a n)
     (proclns (lns @(dat a)))))
+
+(export lin lns flns lvl ind wind lvlind note proc)
+
+)
