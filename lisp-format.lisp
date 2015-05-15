@@ -83,8 +83,8 @@ hey
 
 (def emit (a)
   ;(bugm 'emit a *indlvl* *begline* *linepos* *indented*)
-  (unless *indented* (emitind))
-  (unless (is a "")
+  (ifnot *indented* (emitind))
+  (ifnot (is a "")
     (pr a)
     (+= *linepos* (len a))
     (= *begline* nil)))
@@ -99,7 +99,7 @@ hey
   (reset *linepos* *begline* *indented*))
 
 (def freshln ()
-  (unless *begline* (newln)))
+  (ifnot *begline* (newln)))
 
 (def resetln ()
   (reset *indlvl* *linepos* *begline* *indented*))
