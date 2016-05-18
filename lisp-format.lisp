@@ -83,6 +83,7 @@ hey
 
 (def emit (a)
   ;(bugm 'emit a *indlvl* *begline* *linepos* *indented*)
+  (zap str a)
   (ifnot *indented* (emitind))
   (ifnot (is a "")
     (pr a)
