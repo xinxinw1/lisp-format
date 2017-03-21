@@ -18,7 +18,26 @@
 
 ; proc only uses dat property
 (def note (a opt)
-  (mkdat 'note a opt))
+  (mkdat 'note a {opts opt}))
+
+(def type-to-builder (a)
+  (casetyp a
+    lin lin
+    lns lns
+    flns flns
+    lvl lvl
+    ind ind
+    wind wind
+    note note
+    (err type-to-builder "Unknown type a = $1" a)))
+
+(def map-format (f a)
+  (casetyp a
+    note (note (f (dat a)) (. a opts))
+    (sym str num) (f a)
+    (lin lns flns lvl) ((type-to-builder a) @(map f (dat a)))
+    (ind wind) ((type-to-builder a) (. a n) @(map f (dat a)))
+    (err map-format "Unknown type a = $1" a)))
 
 #|
 line:
@@ -150,6 +169,6 @@ hey
   (dyn *indlvl* (. a n)
     (proclns (lns @(dat a)))))
 
-(export lin lns flns lvl ind wind lvlind note proc)
+(export lin lns flns lvl ind wind lvlind note proc map-format)
 
 )
